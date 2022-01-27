@@ -139,10 +139,7 @@ class Config(object):
     @property
     def proc_name(self):
         pn = self.settings['proc_name'].get()
-        if pn is not None:
-            return pn
-        else:
-            return self.settings['default_proc_name'].get()
+        return pn if pn is not None else self.settings['default_proc_name'].get()
 
     @property
     def logger_class(self):
@@ -153,9 +150,12 @@ class Config(object):
 
         # if default logger is in use, and statsd is on, automagically switch
         # to the statsd logger
-        if uri == LoggerClass.default:
-            if 'statsd_host' in self.settings and self.settings['statsd_host'].value is not None:
-                uri = "gunicorn.instrument.statsd.Statsd"
+        if (
+            uri == LoggerClass.default
+            and 'statsd_host' in self.settings
+            and self.settings['statsd_host'].value is not None
+        ):
+            uri = "gunicorn.instrument.statsd.Statsd"
 
         logger_class = util.load_class(
             uri,
@@ -172,11 +172,11 @@ class Config(object):
 
     @property
     def ssl_options(self):
-        opts = {}
-        for name, value in self.settings.items():
-            if value.section == 'SSL':
-                opts[name] = value.get()
-        return opts
+        return {
+            name: value.get()
+            for name, value in self.settings.items()
+            if value.section == 'SSL'
+        }
 
     @property
     def env(self):
@@ -353,20 +353,18 @@ def validate_dict(val):
 
 
 def validate_pos_int(val):
-    if not isinstance(val, int):
-        val = int(val, 0)
-    else:
-        # Booleans are ints!
-        val = int(val)
+    val = int(val, 0) if not isinstance(val, int) else int(val)
     if val < 0:
         raise ValueError("Value must be positive: %s" % val)
     return val
 
 
 def validate_ssl_version(val):
-    ssl_versions = {}
-    for protocol in [p for p in dir(ssl) if p.startswith("PROTOCOL_")]:
-        ssl_versions[protocol[9:]] = getattr(ssl, protocol)
+    ssl_versions = {
+        protocol[9:]: getattr(ssl, protocol)
+        for protocol in [p for p in dir(ssl) if p.startswith("PROTOCOL_")]
+    }
+
     if val in ssl_versions:
         # string matching PROTOCOL_...
         return ssl_versions[val]
@@ -451,7 +449,7 @@ def validate_callable(arity):
                     "" % (obj_name, mod_name))
         if not callable(val):
             raise TypeError("Value is not callable: %s" % val)
-        if arity != -1 and arity != util.get_arity(val):
+        if arity not in [-1, util.get_arity(val)]:
             raise TypeError("Value must have an arity of: %s" % arity)
         return val
     return _validate_callable

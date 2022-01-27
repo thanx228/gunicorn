@@ -64,8 +64,7 @@ def fmt_setting(s):
     else:
         cli = ""
 
-    out = []
-    out.append(".. _%s:\n" % s.name.replace("_", "-"))
+    out = [".. _%s:\n" % s.name.replace("_", "-")]
     out.append("``%s``" % s.name)
     out.append("~" * (len(s.name) + 4))
     out.append("")
