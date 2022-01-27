@@ -112,13 +112,7 @@ positionals = (
 
 def get_arity(f):
     sig = inspect.signature(f)
-    arity = 0
-
-    for param in sig.parameters.values():
-        if param.kind in positionals:
-            arity += 1
-
-    return arity
+    return sum(param.kind in positionals for param in sig.parameters.values())
 
 
 def get_username(uid):
@@ -289,14 +283,13 @@ def write(sock, data, chunked=False):
 
 def write_nonblock(sock, data, chunked=False):
     timeout = sock.gettimeout()
-    if timeout != 0.0:
-        try:
-            sock.setblocking(0)
-            return write(sock, data, chunked)
-        finally:
-            sock.setblocking(1)
-    else:
+    if timeout == 0.0:
         return write(sock, data, chunked)
+    try:
+        sock.setblocking(0)
+        return write(sock, data, chunked)
+    finally:
+        sock.setblocking(1)
 
 
 def write_error(sock, status_int, reason, mesg):
@@ -449,8 +442,7 @@ def http_date(timestamp=None):
     """Return the current date and time formatted for a message header."""
     if timestamp is None:
         timestamp = time.time()
-    s = email.utils.formatdate(timestamp, localtime=False, usegmt=True)
-    return s
+    return email.utils.formatdate(timestamp, localtime=False, usegmt=True)
 
 
 def is_hoppish(header):
@@ -630,9 +622,7 @@ def reraise(tp, value, tb=None):
 
 
 def bytes_to_str(b):
-    if isinstance(b, str):
-        return b
-    return str(b, 'latin1')
+    return b if isinstance(b, str) else str(b, 'latin1')
 
 
 def unquote_to_wsgi_str(string):

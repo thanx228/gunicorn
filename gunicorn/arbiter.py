@@ -141,17 +141,13 @@ class Arbiter(object):
 
         if not self.LISTENERS:
             fds = None
-            listen_fds = systemd.listen_fds()
-            if listen_fds:
+            if listen_fds := systemd.listen_fds():
                 self.systemd = True
                 fds = range(systemd.SD_LISTEN_FDS_START,
                             systemd.SD_LISTEN_FDS_START + listen_fds)
 
             elif self.master_pid:
-                fds = []
-                for fd in os.environ.pop('GUNICORN_FD').split(','):
-                    fds.append(int(fd))
-
+                fds = [int(fd) for fd in os.environ.pop('GUNICORN_FD').split(',')]
             self.LISTENERS = sock.create_sockets(self.cfg, self.log, fds)
 
         listeners_str = ",".join([str(l) for l in self.LISTENERS])

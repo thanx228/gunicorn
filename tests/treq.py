@@ -146,8 +146,7 @@ class request(object):
             raise AssertionError("Failed to read entire body: %r" % body)
         elif data:
             raise AssertionError("Read beyond expected body: %r" % data)
-        data = req.body.read(sizes())
-        if data:
+        if data := req.body.read(sizes()):
             raise AssertionError("Read after body finished: %r" % data)
 
     def match_readline(self, req, body, sizes):
@@ -168,8 +167,7 @@ class request(object):
             raise AssertionError("Failed to read entire body: %r" % body)
         elif data:
             raise AssertionError("Read beyond expected body: %r" % data)
-        data = req.body.readline(sizes())
-        if data:
+        if data := req.body.readline(sizes()):
             raise AssertionError("Read data after body finished: %r" % data)
 
     def match_readlines(self, req, body, sizes):
@@ -186,8 +184,7 @@ class request(object):
             body = body[len(line):]
         if body:
             raise AssertionError("Failed to read entire body: %r" % body)
-        data = req.body.readlines(sizes())
-        if data:
+        if data := req.body.readlines(sizes()):
             raise AssertionError("Read data after body finished: %r" % data)
 
     def match_iter(self, req, body, sizes):
